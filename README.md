@@ -20,6 +20,7 @@ Installation:
  API Endpoint:
   * `query`:
     * Search for the given term specified by `saleterm`
+    * If no tweets have been added via `add_tweets`, `query` will first populate the database.
     * `curl -d saleterm='kindle' localhost:5000/query` will search for all instances of "kindle"
     * Return is a json object with each hit returned like this:
     ```
