@@ -11,11 +11,11 @@ Installation:
  * Build docker image by running `./build-onecut-docker.sh`
  * Run docker images by running `./run-onecut-docker.sh`
  * `curl localhost:5000/` should return:
-```
+    ```
     {
     "hello_world": "onecut is live!"
     }
-```
+    ```
  
  API Endpoint:
   * `query`:
@@ -31,14 +31,14 @@ Installation:
       }
     ```
     * If multiple terms are given, ie "white dress", then the intersection of the hits for each word are returned.
- * `tweet_count`:
-  * Returns number of tweets in the database
- * `tweet_min_id`:
-  * Returns the minimum Tweet ID in the database
- * `tweet_max_id`:
-  * Returns the maximum Tweet ID in the database
- * `add_tweets`:
-  * Search through the given number of tweets (`num_tweets_to_try`) and add those that have "sale" in the text and have a link to Amazon.
-  * `curl -d num_tweets_to_try=10000 localhost:5000/load_tweets`
+  * `tweet_count`:
+    * Returns number of tweets in the database
+  * `tweet_min_id`:
+    * Returns the minimum Tweet ID in the database
+  * `tweet_max_id`:
+    * Returns the maximum Tweet ID in the database
+  * `add_tweets`:
+    * Search through the given number of tweets (`num_tweets_to_try`) and add those that have "sale" in the text and have a link to Amazon.
+    * `curl -d num_tweets_to_try=10000 localhost:5000/load_tweets`
 
 
