@@ -3,6 +3,9 @@ import oauth2
 import json
 import re
 
+"""
+A helper script to test out functionality.
+"""
 def oauth_req(url, key, secret, http_method="GET", post_body="", http_headers=None):
     consumer = oauth2.Consumer(key='KsB1ZcdEVzfeSyqFDhOhEt39z', secret= 'nH9U0G0KMwV0bJrtWU6v7R2tNkaarQZeQzZeWQyAdB2bcDlhwM')
     token = oauth2.Token(key=key, secret=secret)

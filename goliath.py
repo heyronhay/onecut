@@ -5,13 +5,16 @@ from redis_db import RedisDatabase
 import re
 
 class BirdEater:
+    """Goliath Bird Eating Spider:  It eats tweets!"""
     def __init__(self):
+        """Terrible security, will kill the twitter API app once this is over!"""
         self.consumer_key = 'KsB1ZcdEVzfeSyqFDhOhEt39z'
         self.consumer_secret = 'nH9U0G0KMwV0bJrtWU6v7R2tNkaarQZeQzZeWQyAdB2bcDlhwM'
         self.token_key = '1364612066-ImTvXwjaSQUKlVz8yatQwn77HijKHxZ6bg2D765'
         self.token_secret = '9V3Ptn8N1XQZ9y2IFSFCpcFYxByreQZoYP5KlHajsNyYT'
 
     def oauth_req(self, url, http_method="GET", post_body="", http_headers=None):
+        """Make an autherized request to the given URL using the hardcoded keys and secrets"""
         consumer = oauth2.Consumer(key=self.consumer_key, secret=self.consumer_secret)
         token = oauth2.Token(key=self.token_key, secret=self.token_secret)
         client = oauth2.Client(consumer, token)
@@ -20,7 +23,9 @@ class BirdEater:
         return resp, content
 
     def add_tweets(self, count):
+        """Search count tweets for 'sale' and amazon links, adding hits to redis"""
         def add_tweet(tweet_key, urls, status):
+            """Help function to add a single tweet to redis"""
             tweet_subset = {}
             tweet_subset['tweet_id'] = status['id']
             tweet_subset['full_text'] = str(status['full_text'])
@@ -69,6 +74,7 @@ class BirdEater:
                         add_tweet(tweet_key, urls, status)
                         num_tweets_added += 1
 
+        # tweet_db_status can be used to see if tweets have been loaded.
         redis_db.set("tweet_db_status", "loaded")
 
         return num_tweets_added

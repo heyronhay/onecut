@@ -4,6 +4,7 @@ import os
 import redis
 
 class RedisDatabase:
+    """Wrapper class for redis.  For each command, see redis.io/commands for documentation"""
     def __init__(self):
         redis_host = os.environ.get('REDIS_HOST', '127.0.0.1')
         redis_port = os.environ.get('REDIS_PORT', 6379)
