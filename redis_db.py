@@ -17,6 +17,9 @@ class RedisDatabase:
         value = self.db.get(key)
         return None if not value else value.decode('utf-8')
     
+    def incr(self, key):
+        self.db.incr(key)
+
     def exists(self, key):
         return self.db.exists(key) == 1
 

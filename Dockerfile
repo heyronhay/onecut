@@ -11,4 +11,7 @@ EXPOSE 6379
 COPY . /app
 WORKDIR /app
 RUN pip3 install -r requirements.txt
+
+RUN chmod 764 run-onecut-docker.sh
+RUN chmod 764 build-onecut-docker.sh
 CMD ["/bin/bash", "start.sh"]

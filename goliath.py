@@ -30,6 +30,16 @@ class BirdEater:
             for word in re.split('\W+', status['full_text']):
                 if len(word) > 1:
                     redis_db.sadd('saleterm-{}'.format(word.lower()), tweet_key)
+            status_id_num = int(status['id'])
+            redis_db.sadd('all_tweets', status_id_num)
+            curr_max = int(redis_db.get('tweet_max_id'))
+            if status_id_num > curr_max:
+                redis_db.set('tweet_max_id', status_id_num)
+            curr_min = int(redis_db.get('tweet_min_id'))
+            if status_id_num < curr_min:
+                redis_db.set('tweet_min_id', status_id_num)
+            redis_db.incr('tweet_count')
+                
 
         redis_db = RedisDatabase()
 
@@ -38,12 +48,15 @@ class BirdEater:
         query='https://api.twitter.com/1.1/search/tweets.json?q=sale%20url%3Aamazon&count=100&tweet_mode=extended&result_type=recent'
 
         # Twitter api only returns max 100 tweets at a time, so iterate by 100 up to count.
+        num_tweets_added = 0
         for _ in range(0,count,100):
             resp, json_str = self.oauth_req(query)
 
-            num_tweets_added = 0
             if resp['status'] == '200':
                 json_data = json.loads(json_str.decode('utf-8'))
+                if 'next_results' not in json_data['search_metadata']:
+                    # There are no more tweets to get according to twitter, so stop trying.
+                    break
                 query = "https://api.twitter.com/1.1/search/tweets.json" + json_data['search_metadata']['next_results'] + "&tweet_mode=extended"
                 statuses = json_data['statuses']
 
@@ -56,8 +69,7 @@ class BirdEater:
                         add_tweet(tweet_key, urls, status)
                         num_tweets_added += 1
 
-        resp = Response("Added {} tweets.".format(num_tweets_added), status=200)
         redis_db.set("tweet_db_status", "loaded")
 
-        return resp
+        return num_tweets_added
 

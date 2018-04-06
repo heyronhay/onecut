@@ -8,15 +8,49 @@ from redis_db import RedisDatabase
 from goliath import BirdEater
 import re
 from flask import jsonify, Response
+import sys
 
 app = Flask(__name__)
 redis_db = RedisDatabase()
+redis_db.set('tweet_count', 0)
+redis_db.set('tweet_max_id', -1)
+redis_db.set('tweet_min_id', sys.maxsize)
+
 tweet_scraper = BirdEater()
 default_num_tweets_to_try = 1000
 
 @app.route('/')
 def hello_world():
-    return 'Flask Dockerized'
+    resp_dict = {}
+    resp_dict['hello_world'] = 'onecut is live!'
+    resp = jsonify(resp_dict)
+    resp.status_code = 200
+    return resp
+
+@app.route('/tweet_count')
+def tweet_count():
+    resp_dict = {}
+    resp_dict['tweet_count'] = redis_db.get("tweet_count")
+    resp = jsonify(resp_dict)
+    resp.status_code = 200
+    return resp
+
+@app.route('/tweet_max_id')
+def tweet_max_id():
+    resp_dict = {}
+    resp_dict['tweet_max_id'] = redis_db.get("tweet_max_id")
+    resp = jsonify(resp_dict)
+    resp.status_code = 200
+    return resp
+
+@app.route('/tweet_min_id')
+def tweet_min_id():
+    resp_dict = {}
+    resp_dict['tweet_min_id'] = redis_db.get("tweet_min_id")
+    resp = jsonify(resp_dict)
+    resp.status_code = 200
+    return resp
+
 
 @app.route('/query', methods=['GET','POST'])
 def query():
@@ -44,15 +78,26 @@ def query():
 @app.route('/redis_test')
 def redis_test():
     redis_db.set("test",999)
-    return redis_db.get("test")
+    resp = Response(redis_db.get("test"), status=200)
+
+    return resp
 
 @app.route('/load_tweets', methods=['GET','POST'])
 def tweet():
-    num_tweets_to_try = request.form['num_tweets_to_try']
-    if not num_tweets_to_try:
-        num_tweets_to_try = default_num_tweets_to_try
+    num_tweets_to_try = default_num_tweets_to_try
+    if 'num_tweets_to_try' in request.form:
+        num_tweets_to_try = int(request.form['num_tweets_to_try'])
 
-    return tweet_scraper.add_tweets(num_tweets_to_try)
+    tweet_scraper.add_tweets(num_tweets_to_try)
+
+    resp_dict = {}
+    resp_dict['tweet_count'] = redis_db.get("tweet_count")
+    resp_dict['tweet_min_id'] = redis_db.get("tweet_min_id")
+    resp_dict['tweet_max_id'] = redis_db.get("tweet_max_id")
+    resp = jsonify(resp_dict)
+    resp.status_code = 200
+
+    return resp
 
 if __name__ == '__main__':
     app.run(debug=True,host='0.0.0.0')
