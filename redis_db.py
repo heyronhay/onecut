@@ -16,3 +16,23 @@ class RedisDatabase:
     def get(self, key):
         value = self.db.get(key)
         return None if not value else value.decode('utf-8')
+    
+    def exists(self, key):
+        return self.db.exists(key) == 1
+
+    def hmset(self, key, dict):
+        self.db.hmset(key, dict)
+
+    def hgetall(self, key):
+        value_dict = self.db.hgetall(key)
+        return None if not value_dict else {key.decode('utf-8'):value.decode('utf-8') for key,value in value_dict.items()}
+
+    def sadd(self, key, value):
+        self.db.sadd(key, value)
+    
+    def smembers(self, key):
+        self.db.smembers(key)
+
+    def sinter(self, keys):
+        value = self.db.sinter(keys)
+        return None if not value else [v.decode('utf-8') for v in value]

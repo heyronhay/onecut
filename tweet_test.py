@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import oauth2
 import json
+import re
 
 def oauth_req(url, key, secret, http_method="GET", post_body="", http_headers=None):
     consumer = oauth2.Consumer(key='KsB1ZcdEVzfeSyqFDhOhEt39z', secret= 'nH9U0G0KMwV0bJrtWU6v7R2tNkaarQZeQzZeWQyAdB2bcDlhwM')
@@ -9,20 +10,26 @@ def oauth_req(url, key, secret, http_method="GET", post_body="", http_headers=No
     resp, content = client.request( url, method=http_method, body=bytes(post_body,"utf-8"), headers=http_headers )
     return resp, content
 
-query='https://api.twitter.com/1.1/search/tweets.json?q=sale%20url%3Aamazon&count=1&result_type=recent'
+query='https://api.twitter.com/1.1/search/tweets.json?q=sale%20url%3Aamazon&count=10&tweet_mode=extended&result_type=recent'
 
 resp, json_str = oauth_req( query, '1364612066-ImTvXwjaSQUKlVz8yatQwn77HijKHxZ6bg2D765', '9V3Ptn8N1XQZ9y2IFSFCpcFYxByreQZoYP5KlHajsNyYT' )
 if resp['status'] == '200':
     json_str = json_str.decode('utf-8')
-    print(json_str)
+#    print(json_str)
     json_data = json.loads(json_str)
     tweet_subset = {}
     statuses = json_data['statuses']
-    if len(statuses) > 0:
-        tweet_subset['text'] = json_data['statuses'][0]['text']
-        urls = json_data['statuses'][0]['entities']['urls']
-        if len(urls) > 0:
-            tweet_subset['urls'] = urls[0]['expanded_url']
-        tweet_subset_str = json.dumps(tweet_subset)
-
-        print(tweet_subset_str)
+    for status in statuses:
+        urls = status['entities']['urls']
+        if status['lang'] == 'en' and len(urls) > 0:
+            tweet_subset['full_text'] = status['full_text']
+            for word in re.split('\W+', status['full_text']):
+                if len(word) > 1:
+                    print(word)
+            tweet_subset['amazon_url'] = urls[0]['expanded_url']
+            tweet_subset['tweet_id'] = status['id']
+            tweet_subset['tweet_url'] = 'https://twitter.com/statuses/{}'.format(status['id'])
+            tweet_subset_str = json.dumps(tweet_subset)
+            print(tweet_subset_str)
+        else:
+            print("Skipped tweet.")

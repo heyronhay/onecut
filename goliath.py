@@ -1,6 +1,8 @@
 import oauth2
-from flask import jsonify
+from flask import jsonify, Response
 import json
+from redis_db import RedisDatabase
+import re
 
 class BirdEater:
     def __init__(self):
@@ -18,20 +20,37 @@ class BirdEater:
         return resp, content
 
     def add_tweets(self, count):
-        query='https://api.twitter.com/1.1/search/tweets.json?q=sale%20url%3Aamazon&count={}&result_type=recent'.format(count)
-        resp, tweets_json = self.oauth_req(query)
-        if resp['status'] == '200':
-            tweets_json = tweets_json.decode('utf-8')
-            json_data = json.loads(tweets_json)
+        def add_tweet(tweet_key, urls, status):
             tweet_subset = {}
-            tweet_subset['text'] = json_data['statuses'][0]['text']
-            tweet_subset['urls'] = json_data['statuses'][0]['entities']['urls']['expanded_url']
-            tweet_subset_str = json.dumps(tweet_subset)
-            resp = jsonify(tweet_subset_str)
-            resp.status_code = 200
-        else:
-            resp = jsonify("{}")
-            resp.status_code = resp['status']
+            tweet_subset['tweet_id'] = status['id']
+            tweet_subset['full_text'] = str(status['full_text'])
+            tweet_subset['amazon_url'] = urls[0]['expanded_url']
+            tweet_subset['tweet_url'] = 'https://twitter.com/statuses/{}'.format(status['id'])
+            redis_db.hmset(tweet_key, tweet_subset)
+            for word in re.split('\W+', status['full_text']):
+                if len(word) > 1:
+                    redis_db.sadd('saleterm-{}'.format(word.lower()), tweet_key)
+
+        query='https://api.twitter.com/1.1/search/tweets.json?q=sale%20url%3Aamazon&count={}&tweet_mode=extended&result_type=recent'.format(count)
+        resp, json_str = self.oauth_req(query)
+
+        num_tweets_added = 0
+        if resp['status'] == '200':
+            redis_db = RedisDatabase()
+
+            json_data = json.loads(json_str.decode('utf-8'))
+            statuses = json_data['statuses']
+
+            for status in statuses:
+                urls = status['entities']['urls']
+                tweet_key = 'tweet-{}'.format(status['id'])
+                if (status['lang'] == 'en' 
+                        and len(urls) > 0 
+                        and not redis_db.exists(tweet_key)):
+                    add_tweet(tweet_key, urls, status)
+                    num_tweets_added += 1
+
+        resp = Response("Added {} tweets.".format(num_tweets_added), status=200)
 
         return resp
 
