@@ -31,26 +31,33 @@ class BirdEater:
                 if len(word) > 1:
                     redis_db.sadd('saleterm-{}'.format(word.lower()), tweet_key)
 
-        query='https://api.twitter.com/1.1/search/tweets.json?q=sale%20url%3Aamazon&count={}&tweet_mode=extended&result_type=recent'.format(count)
-        resp, json_str = self.oauth_req(query)
+        redis_db = RedisDatabase()
 
-        num_tweets_added = 0
-        if resp['status'] == '200':
-            redis_db = RedisDatabase()
+        # Put in a notification entry into redis to signify the data is being loaded
+        redis_db.set("tweet_db_status", "loading")
+        query='https://api.twitter.com/1.1/search/tweets.json?q=sale%20url%3Aamazon&count=100&tweet_mode=extended&result_type=recent'
 
-            json_data = json.loads(json_str.decode('utf-8'))
-            statuses = json_data['statuses']
+        # Twitter api only returns max 100 tweets at a time, so iterate by 100 up to count.
+        for _ in range(0,count,100):
+            resp, json_str = self.oauth_req(query)
 
-            for status in statuses:
-                urls = status['entities']['urls']
-                tweet_key = 'tweet-{}'.format(status['id'])
-                if (status['lang'] == 'en' 
-                        and len(urls) > 0 
-                        and not redis_db.exists(tweet_key)):
-                    add_tweet(tweet_key, urls, status)
-                    num_tweets_added += 1
+            num_tweets_added = 0
+            if resp['status'] == '200':
+                json_data = json.loads(json_str.decode('utf-8'))
+                query = "https://api.twitter.com/1.1/search/tweets.json" + json_data['search_metadata']['next_results'] + "&tweet_mode=extended"
+                statuses = json_data['statuses']
+
+                for status in statuses:
+                    urls = status['entities']['urls']
+                    tweet_key = 'tweet-{}'.format(status['id'])
+                    if (status['lang'] == 'en' 
+                            and len(urls) > 0 
+                            and not redis_db.exists(tweet_key)):
+                        add_tweet(tweet_key, urls, status)
+                        num_tweets_added += 1
 
         resp = Response("Added {} tweets.".format(num_tweets_added), status=200)
+        redis_db.set("tweet_db_status", "loaded")
 
         return resp
 
