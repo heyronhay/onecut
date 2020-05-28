@@ -8,10 +8,10 @@ class BirdEater:
     """Goliath Bird Eating Spider:  It eats tweets!"""
     def __init__(self):
         """Terrible security, will kill the twitter API app once this is over!"""
-        self.consumer_key = 'KsB1ZcdEVzfeSyqFDhOhEt39z'
-        self.consumer_secret = 'nH9U0G0KMwV0bJrtWU6v7R2tNkaarQZeQzZeWQyAdB2bcDlhwM'
-        self.token_key = '1364612066-ImTvXwjaSQUKlVz8yatQwn77HijKHxZ6bg2D765'
-        self.token_secret = '9V3Ptn8N1XQZ9y2IFSFCpcFYxByreQZoYP5KlHajsNyYT'
+        self.consumer_key = 'nope'
+        self.consumer_secret = 'nope'
+        self.token_key = 'nope'
+        self.token_secret = 'nope'
 
     def oauth_req(self, url, http_method="GET", post_body="", http_headers=None):
         """Make an autherized request to the given URL using the hardcoded keys and secrets"""
